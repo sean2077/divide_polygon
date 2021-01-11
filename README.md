@@ -23,10 +23,17 @@ def divide_polygon(
 ## Effect Picture
 
 divide into 2 parts:
+
 ![divide_2](./images/divide_2.png)
+
 divide into 3 parts:
+
 ![divide_3](./images/divide_3.png)
+
 divide into 4 parts:
+
 ![divide_4](./images/divide_4.png)
+
 divide into 5 parts:
+
 ![divide_5](./images/divide_5.png)

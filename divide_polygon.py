@@ -2,13 +2,13 @@
 Author       : zhangxianbing
 Date         : 2021-01-11 09:01:15
 LastEditors  : zhangxianbing
-LastEditTime : 2021-01-11 17:27:59
+LastEditTime : 2021-01-11 18:06:22
 Description  : Divide polygon
 """
 
 import copy
 from math import atan2, cos, pi, sin, sqrt
-from typing import List
+from typing import List, Tuple
 
 
 class Point:
@@ -20,12 +20,16 @@ class Point:
         return f"({self.x:.2f}, {self.y:.2f})"
 
 
-def _cross_point(p1: Point, p2: Point, x):
+_Segment = Tuple[Point, Point]
+_Polygon = List[Point]
+
+
+def _cross_point(p1: Point, p2: Point, x) -> Point:
     y = (p2.y - p1.y) / (p2.x - p1.x) * (x - p1.x) + p1.y
     return Point(x, y)
 
 
-def _sep_polygon_lines(p: List[Point]):
+def _sep_polygon_segs(p: _Polygon) -> List[_Segment]:
     t, b = -1, 0
     rt = p[t]  # right top point
     rb = p[b]  # right bottom point
@@ -54,7 +58,7 @@ def _sep_polygon_lines(p: List[Point]):
     return lines
 
 
-def _eval_polygon_area(p: List[Point]):
+def _eval_polygon_area(p: _Polygon) -> float:
     """evaluate area of a polygon using shoelace formula."""
     area = 0.0
     n = len(p)
@@ -66,14 +70,14 @@ def _eval_polygon_area(p: List[Point]):
     return abs(area / 2.0)
 
 
-def _eval_trapezoid_area(l1: List[Point], l2: List[Point]):
+def _eval_trapezoid_area(l1: _Segment, l2: _Segment) -> float:
     a = l1[1].y - l1[0].y
     b = l2[1].y - l2[0].y
     h = l2[0].x - l1[0].x
     return (a + b) * h / 2.0
 
 
-def _sep_trapeziod_area(l1: List[Point], l2: List[Point], A):
+def _sep_trapeziod_area(l1: _Segment, l2: _Segment, A: float) -> float:
     a = l1[1].y - l1[0].y
     b = l2[1].y - l2[0].y
     h = l2[0].x - l1[0].x
@@ -86,7 +90,7 @@ def _sep_trapeziod_area(l1: List[Point], l2: List[Point], A):
     return (l1[0].x + lmd * l2[0].x) / (1 + lmd)
 
 
-def _divide_polygon(p: List[Point], n: int, tolerance=1e-12):
+def _divide_polygon(p: _Polygon, n: int, tolerance=1e-12) -> List[_Segment]:
     """Divede polygon with parallel lines
 
     Args:
@@ -95,10 +99,10 @@ def _divide_polygon(p: List[Point], n: int, tolerance=1e-12):
         tolerance (float, optional): tolerance, expressed as polygon area percentage. Defaults to 1e-12.
 
     Returns:
-        [type]: [description]
+        List[Tuple[Point, Point]]: [description]
     """
     res = []
-    sep_lines = _sep_polygon_lines(p)
+    sep_lines = _sep_polygon_segs(p)
     area = _eval_polygon_area(p)
     tol_area = area * tolerance
     des_area = area / n
@@ -133,13 +137,13 @@ def _divide_polygon(p: List[Point], n: int, tolerance=1e-12):
     return res
 
 
-def _translate_coord(origin: List[Point], trans: Point):
+def _translate_coord(origin: List[Point], trans: Point) -> None:
     for i in range(len(origin)):
         origin[i].x += trans.x
         origin[i].y += trans.y
 
 
-def _rotate_coord(origin: List[Point], theta: float):
+def _rotate_coord(origin: List[Point], theta: float) -> None:
     sin_theta, cos_theta = sin(theta), cos(theta)
     for i in range(len(origin)):
         px, py = origin[i].x, origin[i].y
@@ -148,8 +152,8 @@ def _rotate_coord(origin: List[Point], theta: float):
 
 
 def divide_polygon(
-    poly: List[Point], n: int, idx: int, tolerance=1e-12, in_place=False
-):
+    poly: _Polygon, n: int, idx: int, tolerance=1e-12, in_place=False
+) -> List[_Segment]:
     """Divede polygon with parallel lines
 
     Args:
@@ -160,7 +164,7 @@ def divide_polygon(
         in_place (bool, optional): whether to operate in place.
 
     Returns:
-        [type]: [description]
+        List[Tuple[Point, Point]]: [description]
     """
     if not in_place:
         p = copy.deepcopy(poly)
@@ -188,7 +192,7 @@ def divide_polygon(
 
 
 # for test
-def _draw_polygon(p: List[Point], lines=None, title=""):
+def _draw_polygon(p: _Polygon, lines=None, title="") -> None:
     import matplotlib.pyplot as plt
 
     coord = [(_p.x, _p.y) for _p in p]

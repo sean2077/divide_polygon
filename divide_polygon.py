@@ -2,11 +2,12 @@
 Author       : zhangxianbing
 Date         : 2021-01-11 09:01:15
 LastEditors  : zhangxianbing
-LastEditTime : 2021-01-11 14:42:51
+LastEditTime : 2021-01-11 16:56:38
 Description  : Divide polygon
 """
 
-from math import sqrt
+import copy
+from math import atan2, cos, pi, sin, sqrt
 from typing import List
 
 
@@ -85,7 +86,7 @@ def _sep_trapeziod_area(l1: List[Point], l2: List[Point], A):
     return (l1[0].x + lmd * l2[0].x) / (1 + lmd)
 
 
-def divide_polygon(p: List[Point], n: int, tolerance=1e-12):
+def _divide_polygon(p: List[Point], n: int, tolerance=1e-12):
     """Divede polygon with parallel lines
 
     Args:
@@ -132,6 +133,77 @@ def divide_polygon(p: List[Point], n: int, tolerance=1e-12):
     return res
 
 
+def _translate_coord(origin: List[Point], trans: Point):
+    for i in range(len(origin)):
+        origin[i].x += trans.x
+        origin[i].y += trans.y
+
+
+def _rotate_coord(origin: List[Point], theta: float):
+    sin_theta, cos_theta = sin(theta), cos(theta)
+    for i in range(len(origin)):
+        px, py = origin[i].x, origin[i].y
+        origin[i].x = cos_theta * px + sin_theta * py
+        origin[i].y = -sin_theta * px + cos_theta * py
+
+
+def divide_polygon(poly: List[Point], n: int, idx: int, tolerance=1e-12, in_place=True):
+    """Divede polygon with parallel lines
+
+    Args:
+        poly (List[Point]): counterclockwise polygon with edge p[0]p[-1] on y axis.
+        n (int): divisor
+        idx (int): edge (p[idx-1]p[idx]) sepcified to parallel with.
+        tolerance (float, optional): tolerance, expressed as polygon area percentage. Defaults to 1e-12.
+        in_place (bool, optional): whether to operate in place.
+
+    Returns:
+        [type]: [description]
+    """
+    if in_place:
+        p = copy.deepcopy(poly)
+    else:
+        p = poly
+    # tanslate current coordinate system by by -p[idx]
+    trans = Point(-p[idx].x, -p[idx].y)
+    _translate_coord(p, trans)
+    # rotate current coordinate system by theta and tanslate by -p[idx]
+    # angle from sepc line to y axis
+    theta = atan2(p[idx - 1].y - p[idx].y, p[idx - 1].x - p[idx].x) - pi / 2.0
+    _rotate_coord(p, theta)
+    # change p[idx] to p[0]
+    p = p[idx:] + p[:idx]
+
+    lines = _divide_polygon(p, n, tolerance)
+
+    # convert to origin coord
+    trans = Point(-trans.x, -trans.y)
+    for i in range(len(lines)):
+        _rotate_coord(lines[i], -theta)
+        _translate_coord(lines[i], trans)
+
+    return lines
+
+
+# for test
+def _draw_polygon(p: List[Point], lines=None):
+    import matplotlib.pyplot as plt
+
+    coord = [(_p.x, _p.y) for _p in p]
+    coord.append(coord[0])
+    xs, ys = zip(*coord)
+    plt.figure()
+    plt.axis("square")
+    plt.xlim(-5, 5)
+    plt.ylim(-5, 5)
+    plt.grid(color="r", linestyle="--", linewidth=1, alpha=0.3)
+    plt.plot(xs, ys)
+    if lines:
+        for line in lines:
+            plt.plot([p.x for p in line], [p.y for p in line])
+    plt.show()
+
+
 if __name__ == "__main__":
     p1 = [
         Point(0, 0),
@@ -155,5 +227,10 @@ if __name__ == "__main__":
     #         0.5,
     #     )
     # )
-    for i in range(2, 10):
-        print(divide_polygon(p1, i))
+    # for i in range(2, 10):
+    #     print(_divide_polygon(p1, i))
+
+    # _draw_polygon(p1)
+    lines = divide_polygon(p1, 4, 1)
+    print(p1)
+    _draw_polygon(p1, lines)

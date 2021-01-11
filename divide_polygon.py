@@ -1,8 +1,8 @@
 """
 Author       : zhangxianbing
 Date         : 2021-01-11 09:01:15
-LastEditors  : zhangxianbing
-LastEditTime : 2021-01-11 18:06:22
+LastEditors  : zhangxianbing1
+LastEditTime : 2021-01-11 18:48:40
 Description  : Divide polygon
 """
 
@@ -52,7 +52,7 @@ def _sep_polygon_segs(p: _Polygon) -> List[_Segment]:
             b = b + 1
         if rt.y < rb.y:
             break
-        lines.append(((rb, rt)))
+        lines.append((rb, rt))
         lt = rt
         lb = rb
     return lines

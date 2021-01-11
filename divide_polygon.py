@@ -2,7 +2,7 @@
 Author       : zhangxianbing
 Date         : 2021-01-11 09:01:15
 LastEditors  : zhangxianbing
-LastEditTime : 2021-01-11 16:56:38
+LastEditTime : 2021-01-11 17:02:55
 Description  : Divide polygon
 """
 
@@ -147,7 +147,9 @@ def _rotate_coord(origin: List[Point], theta: float):
         origin[i].y = -sin_theta * px + cos_theta * py
 
 
-def divide_polygon(poly: List[Point], n: int, idx: int, tolerance=1e-12, in_place=True):
+def divide_polygon(
+    poly: List[Point], n: int, idx: int, tolerance=1e-12, in_place=False
+):
     """Divede polygon with parallel lines
 
     Args:
@@ -160,7 +162,7 @@ def divide_polygon(poly: List[Point], n: int, idx: int, tolerance=1e-12, in_plac
     Returns:
         [type]: [description]
     """
-    if in_place:
+    if not in_place:
         p = copy.deepcopy(poly)
     else:
         p = poly

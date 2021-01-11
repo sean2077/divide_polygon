@@ -2,7 +2,7 @@
 Author       : zhangxianbing
 Date         : 2021-01-11 09:01:15
 LastEditors  : zhangxianbing
-LastEditTime : 2021-01-11 17:02:55
+LastEditTime : 2021-01-11 17:27:59
 Description  : Divide polygon
 """
 
@@ -188,7 +188,7 @@ def divide_polygon(
 
 
 # for test
-def _draw_polygon(p: List[Point], lines=None):
+def _draw_polygon(p: List[Point], lines=None, title=""):
     import matplotlib.pyplot as plt
 
     coord = [(_p.x, _p.y) for _p in p]
@@ -203,7 +203,10 @@ def _draw_polygon(p: List[Point], lines=None):
     if lines:
         for line in lines:
             plt.plot([p.x for p in line], [p.y for p in line])
-    plt.show()
+    if title:
+        plt.savefig(title)
+    else:
+        plt.show()
 
 
 if __name__ == "__main__":
@@ -232,7 +235,8 @@ if __name__ == "__main__":
     # for i in range(2, 10):
     #     print(_divide_polygon(p1, i))
 
-    # _draw_polygon(p1)
-    lines = divide_polygon(p1, 4, 1)
     print(p1)
-    _draw_polygon(p1, lines)
+    for i in range(2, 6):
+        lines = divide_polygon(p1, i, 6)
+        print(lines)
+        _draw_polygon(p1, lines, f"divide_{i}.png")

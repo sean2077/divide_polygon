@@ -2,7 +2,7 @@
 Author       : zhangxianbing
 Date         : 2021-01-11 09:01:15
 LastEditors  : zhangxianbing
-LastEditTime : 2021-01-12 09:54:18
+LastEditTime : 2021-01-12 12:46:17
 Description  : Divide polygon
 """
 
@@ -134,13 +134,12 @@ def _sep_trapeziod(left: _Segment, right: _Segment, des_area: float) -> float:
     return (left[0].x + lmd * right[0].x) / (1 + lmd)
 
 
-def _divide_polygon(p: _Polygon, n: int, tolerance=1e-12) -> List[_Segment]:
+def _divide_polygon(p: _Polygon, n: int) -> List[_Segment]:
     """Divede polygon with lines parallel with its fisrt edge.
 
     Args:
-        p (_Polygon): convex polygon counterclockwise, with the first edge(p[0]p[-1]) on the y axis.
+        p (_Polygon): convex polygon counterclockwise, with the first edge(p[0]p[-1]) parallel with y axis.
         n (int): number of parts to divide polygon into.
-        tolerance ([type], optional): tolerance, expressed as polygon area percentage. Defaults to 1e-12.
 
     Returns:
         List[_Segment]: dividing segments
@@ -148,7 +147,6 @@ def _divide_polygon(p: _Polygon, n: int, tolerance=1e-12) -> List[_Segment]:
     res = []
     segs = _dividing_polygon_segs(p)
     area = _polygon_area(p)
-    tol_area = area * tolerance
     des_area = area / n
     cur_area = 0.0
     left_seg = (p[0], p[-1])
@@ -159,12 +157,12 @@ def _divide_polygon(p: _Polygon, n: int, tolerance=1e-12) -> List[_Segment]:
         trap_area = _trapezoid_area(left_seg, right_seg)
         delta_area = des_area - (trap_area + cur_area)
 
-        if delta_area > tol_area:
+        if delta_area > 0.0:
             left_seg = right_seg
             cur_area += trap_area
             i += 1
 
-        elif delta_area < tol_area:
+        elif delta_area < 0.0:
             x = _sep_trapeziod(left_seg, right_seg, des_area - cur_area)
             bott = _cross_point(left_seg[0], right_seg[0], x)
             top = _cross_point(left_seg[1], right_seg[1], x)
@@ -172,25 +170,13 @@ def _divide_polygon(p: _Polygon, n: int, tolerance=1e-12) -> List[_Segment]:
             res.append(left_seg)
             cur_area = 0.0
 
-        elif abs(delta_area) <= tol_area:
+        else:
             left_seg = right_seg
             res.append(left_seg)
             cur_area = 0.0
             i += 1
 
     return res
-
-
-def _translate_coord(origin: List[Point], trans: Point) -> None:
-    """Translate coordinate system by `trans`.
-
-    Args:
-        origin (List[Point]): coordinates to be translated.
-        trans (Point): the translation to translate
-    """
-    for i in range(len(origin)):
-        origin[i].x += trans.x
-        origin[i].y += trans.y
 
 
 def _rotate_coord(origin: List[Point], theta: float) -> None:
@@ -207,17 +193,14 @@ def _rotate_coord(origin: List[Point], theta: float) -> None:
         origin[i].y = -sin_theta * px + cos_theta * py
 
 
-def divide_polygon(
-    poly: _Polygon, n: int, idx: int, tolerance=1e-12, in_place=False
-) -> List[_Segment]:
+def divide_polygon(poly: _Polygon, n: int, idx: int, in_place=False) -> List[_Segment]:
     """Divede polygon with lines parallel with its idx-th edge.
 
     Args:
         poly (_Polygon): counterclockwise polygon with edge p[0]p[-1] on y axis.
         n (int): number of parts to divide polygon into.
         idx (int): index of edge to be paralleled with.
-        tolerance ([type], optional): tolerance, expressed as polygon area percentage. Defaults to 1e-12.
-        in_place (bool, optional): [description]. Defaults to False.
+        in_place (bool, optional): whether to operate in place (If true, input data would be changed). Defaults to False.
 
     Returns:
         List[_Segment]: dividing segments
@@ -226,23 +209,17 @@ def divide_polygon(
         p = copy.deepcopy(poly)
     else:
         p = poly
-    # tanslate current coordinate system by by -p[idx]
-    trans = Point(-p[idx].x, -p[idx].y)
-    _translate_coord(p, trans)
-    # rotate current coordinate system by theta
-    # angle from sepc line to y axis
+    # rotate current coordinate system by theta(angle from sepc line to y axis)
     theta = atan2(p[idx - 1].y - p[idx].y, p[idx - 1].x - p[idx].x) - pi / 2.0
     _rotate_coord(p, theta)
     # change p[idx] to p[0]
     p = p[idx:] + p[:idx]
 
-    lines = _divide_polygon(p, n, tolerance)
+    lines = _divide_polygon(p, n)
 
     # convert to origin coord
-    trans = Point(-trans.x, -trans.y)
     for i in range(len(lines)):
         _rotate_coord(lines[i], -theta)
-        _translate_coord(lines[i], trans)
 
     return lines
 
@@ -270,8 +247,10 @@ def _draw_polygon(p: _Polygon, lines=None, title="") -> None:
 
 
 if __name__ == "__main__":
+    import os
+
     p1 = [
-        Point(0, 0),
+        Point(-1, 0),
         Point(0.5, -1),
         Point(1.5, -1.5),
         Point(2.5, -1.5),
@@ -279,7 +258,7 @@ if __name__ == "__main__":
         Point(3.5, 3),
         Point(2.5, 3.5),
         Point(1, 3),
-        Point(0, 1),
+        Point(-0.5, 1),
     ]
     # print(_sep_polygon_lines(p1))
 
@@ -299,4 +278,4 @@ if __name__ == "__main__":
     for i in range(2, 6):
         lines = divide_polygon(p1, i, 6)
         print(lines)
-        _draw_polygon(p1, lines, f"divide_{i}.png")
+        _draw_polygon(p1, lines, os.path.join("images", f"divide_{i}.png"))

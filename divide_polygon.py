@@ -1,8 +1,8 @@
 """
 Author       : zhangxianbing
 Date         : 2021-01-11 09:01:15
-LastEditors  : zhangxianbing1
-LastEditTime : 2021-01-11 18:48:40
+LastEditors  : zhangxianbing
+LastEditTime : 2021-01-12 09:54:18
 Description  : Divide polygon
 """
 
@@ -24,18 +24,36 @@ _Segment = Tuple[Point, Point]
 _Polygon = List[Point]
 
 
-def _cross_point(p1: Point, p2: Point, x) -> Point:
+def _cross_point(p1: Point, p2: Point, x: float) -> Point:
+    """Get the point on segment(p1p2) whose first-dimensional coordinate is x
+
+    Args:
+        p1 (Point): point1
+        p2 (Point): point2
+        x (float): first-dimensional coordinate
+
+    Returns:
+        Point: returned point
+    """
     y = (p2.y - p1.y) / (p2.x - p1.x) * (x - p1.x) + p1.y
     return Point(x, y)
 
 
-def _sep_polygon_segs(p: _Polygon) -> List[_Segment]:
+def _dividing_polygon_segs(p: _Polygon) -> List[_Segment]:
+    """Get segments to divide polygon into multiple trapezoids.
+
+    Args:
+        p (_Polygon): convex polygon
+
+    Returns:
+        List[_Segment]: dividing segments
+    """
     t, b = -1, 0
     rt = p[t]  # right top point
     rb = p[b]  # right bottom point
     lt = rt  # left top point
     lb = rb  # left bottom point
-    lines = []
+    segs = []
     while True:
         if p[t - 1].x < p[b + 1].x:
             rt = p[t - 1]
@@ -52,14 +70,21 @@ def _sep_polygon_segs(p: _Polygon) -> List[_Segment]:
             b = b + 1
         if rt.y < rb.y:
             break
-        lines.append((rb, rt))
+        segs.append(((rb, rt)))
         lt = rt
         lb = rb
-    return lines
+    return segs
 
 
-def _eval_polygon_area(p: _Polygon) -> float:
-    """evaluate area of a polygon using shoelace formula."""
+def _polygon_area(p: _Polygon) -> float:
+    """Evaluate area of a polygon using shoelace formula.
+
+    Args:
+        p (_Polygon): convex polygon
+
+    Returns:
+        float: area of polygon
+    """
     area = 0.0
     n = len(p)
     j = n - 1
@@ -70,67 +95,86 @@ def _eval_polygon_area(p: _Polygon) -> float:
     return abs(area / 2.0)
 
 
-def _eval_trapezoid_area(l1: _Segment, l2: _Segment) -> float:
-    a = l1[1].y - l1[0].y
-    b = l2[1].y - l2[0].y
-    h = l2[0].x - l1[0].x
+def _trapezoid_area(left: _Segment, right: _Segment) -> float:
+    """Evaluate area of a trapezoid.
+
+    Args:
+        left (_Segment): left segment (left_bottom, left_top) of the trapezoid
+        right (_Segment): right segment (right_bottom, right_top) of the trapezoid
+
+    Returns:
+        float: area of trapezoid
+    """
+    a = left[1].y - left[0].y
+    b = right[1].y - right[0].y
+    h = right[0].x - left[0].x
     return (a + b) * h / 2.0
 
 
-def _sep_trapeziod_area(l1: _Segment, l2: _Segment, A: float) -> float:
-    a = l1[1].y - l1[0].y
-    b = l2[1].y - l2[0].y
-    h = l2[0].x - l1[0].x
-    S = (a + b) * h / 2.0
+def _sep_trapeziod(left: _Segment, right: _Segment, des_area: float) -> float:
+    """Separate the left part of the specified area from the trapeziod.
+
+    Args:
+        left (_Segment): left segment (left_bottom, left_top) of the trapezoid
+        right (_Segment): right segment (right_bottom, right_top) of the trapezoid
+        des_area (float): desired area
+
+    Returns:
+        float: dividing point's first-dimensional coordinate `x`
+    """
+    a = left[1].y - left[0].y
+    b = right[1].y - right[0].y
+    h = right[0].x - left[0].x
+    area = (a + b) * h / 2.0
     if a == b:
-        lmd = A / (S - A)
+        lmd = des_area / (area - des_area)
     else:
-        c = sqrt(a ** 2 + (A / S) * (b ** 2 - a ** 2))
+        c = sqrt(a ** 2 + (des_area / area) * (b ** 2 - a ** 2))
         lmd = (c - a) / (b - c)
-    return (l1[0].x + lmd * l2[0].x) / (1 + lmd)
+    return (left[0].x + lmd * right[0].x) / (1 + lmd)
 
 
 def _divide_polygon(p: _Polygon, n: int, tolerance=1e-12) -> List[_Segment]:
-    """Divede polygon with parallel lines
+    """Divede polygon with lines parallel with its fisrt edge.
 
     Args:
-        p (List[Point]): counterclockwise polygon with edge p[0]p[-1] on y axis.
-        n (int): divisor
-        tolerance (float, optional): tolerance, expressed as polygon area percentage. Defaults to 1e-12.
+        p (_Polygon): convex polygon counterclockwise, with the first edge(p[0]p[-1]) on the y axis.
+        n (int): number of parts to divide polygon into.
+        tolerance ([type], optional): tolerance, expressed as polygon area percentage. Defaults to 1e-12.
 
     Returns:
-        List[Tuple[Point, Point]]: [description]
+        List[_Segment]: dividing segments
     """
     res = []
-    sep_lines = _sep_polygon_segs(p)
-    area = _eval_polygon_area(p)
+    segs = _dividing_polygon_segs(p)
+    area = _polygon_area(p)
     tol_area = area * tolerance
     des_area = area / n
     cur_area = 0.0
-    left_line = (p[0], p[-1])
+    left_seg = (p[0], p[-1])
     i = 0
 
-    while i < len(sep_lines) and len(res) < n - 1:
-        right_line = sep_lines[i]
-        trap_area = _eval_trapezoid_area(left_line, right_line)
+    while i < len(segs) and len(res) < n - 1:
+        right_seg = segs[i]
+        trap_area = _trapezoid_area(left_seg, right_seg)
         delta_area = des_area - (trap_area + cur_area)
 
         if delta_area > tol_area:
-            left_line = right_line
+            left_seg = right_seg
             cur_area += trap_area
             i += 1
 
         elif delta_area < tol_area:
-            x = _sep_trapeziod_area(left_line, right_line, des_area - cur_area)
-            bott = _cross_point(left_line[0], right_line[0], x)
-            top = _cross_point(left_line[1], right_line[1], x)
-            left_line = (bott, top)
-            res.append(left_line)
+            x = _sep_trapeziod(left_seg, right_seg, des_area - cur_area)
+            bott = _cross_point(left_seg[0], right_seg[0], x)
+            top = _cross_point(left_seg[1], right_seg[1], x)
+            left_seg = (bott, top)
+            res.append(left_seg)
             cur_area = 0.0
 
         elif abs(delta_area) <= tol_area:
-            left_line = right_line
-            res.append(left_line)
+            left_seg = right_seg
+            res.append(left_seg)
             cur_area = 0.0
             i += 1
 
@@ -138,12 +182,24 @@ def _divide_polygon(p: _Polygon, n: int, tolerance=1e-12) -> List[_Segment]:
 
 
 def _translate_coord(origin: List[Point], trans: Point) -> None:
+    """Translate coordinate system by `trans`.
+
+    Args:
+        origin (List[Point]): coordinates to be translated.
+        trans (Point): the translation to translate
+    """
     for i in range(len(origin)):
         origin[i].x += trans.x
         origin[i].y += trans.y
 
 
 def _rotate_coord(origin: List[Point], theta: float) -> None:
+    """Rotate coordinate system by `theta`.
+
+    Args:
+        origin (List[Point]): coordinates to be translated.
+        theta (float): the angle to rotate
+    """
     sin_theta, cos_theta = sin(theta), cos(theta)
     for i in range(len(origin)):
         px, py = origin[i].x, origin[i].y
@@ -154,17 +210,17 @@ def _rotate_coord(origin: List[Point], theta: float) -> None:
 def divide_polygon(
     poly: _Polygon, n: int, idx: int, tolerance=1e-12, in_place=False
 ) -> List[_Segment]:
-    """Divede polygon with parallel lines
+    """Divede polygon with lines parallel with its idx-th edge.
 
     Args:
-        poly (List[Point]): counterclockwise polygon with edge p[0]p[-1] on y axis.
-        n (int): divisor
-        idx (int): edge (p[idx-1]p[idx]) sepcified to parallel with.
-        tolerance (float, optional): tolerance, expressed as polygon area percentage. Defaults to 1e-12.
-        in_place (bool, optional): whether to operate in place.
+        poly (_Polygon): counterclockwise polygon with edge p[0]p[-1] on y axis.
+        n (int): number of parts to divide polygon into.
+        idx (int): index of edge to be paralleled with.
+        tolerance ([type], optional): tolerance, expressed as polygon area percentage. Defaults to 1e-12.
+        in_place (bool, optional): [description]. Defaults to False.
 
     Returns:
-        List[Tuple[Point, Point]]: [description]
+        List[_Segment]: dividing segments
     """
     if not in_place:
         p = copy.deepcopy(poly)
@@ -173,7 +229,7 @@ def divide_polygon(
     # tanslate current coordinate system by by -p[idx]
     trans = Point(-p[idx].x, -p[idx].y)
     _translate_coord(p, trans)
-    # rotate current coordinate system by theta and tanslate by -p[idx]
+    # rotate current coordinate system by theta
     # angle from sepc line to y axis
     theta = atan2(p[idx - 1].y - p[idx].y, p[idx - 1].x - p[idx].x) - pi / 2.0
     _rotate_coord(p, theta)
@@ -225,7 +281,7 @@ if __name__ == "__main__":
         Point(1, 3),
         Point(0, 1),
     ]
-    # print(_sep_polygon_lines(polygon))
+    # print(_sep_polygon_lines(p1))
 
     # print(_eval_polygon_area([Point(0, 1), Point(2, 3), Point(4, 7)]))
 

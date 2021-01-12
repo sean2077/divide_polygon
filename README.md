@@ -4,19 +4,19 @@ A python implement for dividing polygon algorithm.
 
 ```py
 def divide_polygon(
-    poly: List[Point], n: int, idx: int, tolerance=1e-12, in_place=False
-):
-    """Divede polygon with parallel lines
+    poly: _Polygon, n: int, idx: int, tolerance=1e-12, in_place=False
+) -> List[_Segment]:
+    """Divede polygon with lines parallel with its idx-th edge.
 
     Args:
-        poly (List[Point]): counterclockwise polygon with edge p[0]p[-1] on y axis.
-        n (int): divisor
-        idx (int): edge (p[idx-1]p[idx]) sepcified to parallel with.
-        tolerance (float, optional): tolerance, expressed as polygon area percentage. Defaults to 1e-12.
-        in_place (bool, optional): whether to operate in place.
+        poly (_Polygon): counterclockwise polygon with edge p[0]p[-1] on y axis.
+        n (int): number of parts to divide polygon into.
+        idx (int): index of edge to be paralleled with.
+        tolerance ([type], optional): tolerance, expressed as polygon area percentage. Defaults to 1e-12.
+        in_place (bool, optional): [description]. Defaults to False.
 
     Returns:
-        [type]: [description]
+        List[_Segment]: dividing segments
     """
 ```
 

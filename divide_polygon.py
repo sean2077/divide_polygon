@@ -2,7 +2,7 @@
 Author       : zhangxianbing
 Date         : 2021-01-11 09:01:15
 LastEditors  : zhangxianbing
-LastEditTime : 2021-01-13 16:29:05
+LastEditTime : 2021-01-13 17:27:06
 Description  : Divide polygon
 """
 
@@ -233,8 +233,8 @@ def _draw_polygon(p: _Polygon, lines=None, title="") -> None:
     xs, ys = zip(*coord)
     plt.figure()
     plt.axis("square")
-    plt.xlim(-5, 5)
-    plt.ylim(-5, 5)
+    plt.xlim(min(p, key=lambda p: p.x).x - 1, max(p, key=lambda p: p.x).x + 1)
+    plt.ylim(min(p, key=lambda p: p.y).y - 1, max(p, key=lambda p: p.y).y + 1)
     plt.grid(color="r", linestyle="--", linewidth=1, alpha=0.3)
     plt.plot(xs, ys)
     if lines:
@@ -249,7 +249,8 @@ def _draw_polygon(p: _Polygon, lines=None, title="") -> None:
 if __name__ == "__main__":
     import os
 
-    p1 = [
+    # poly = [Point(3, 3), Point(8, 3), Point(8, 6), Point(3, 6)]
+    poly = [
         Point(-1, 0),
         Point(0.5, -1),
         Point(1.5, -1.5),
@@ -260,6 +261,7 @@ if __name__ == "__main__":
         Point(1, 3),
         Point(-0.5, 1),
     ]
+
     # print(_sep_polygon_lines(p1))
 
     # print(_eval_polygon_area([Point(0, 1), Point(2, 3), Point(4, 7)]))
@@ -274,8 +276,8 @@ if __name__ == "__main__":
     # for i in range(2, 10):
     #     print(_divide_polygon(p1, i))
 
-    print(p1)
+    print(f"polygon: {poly}")
     for i in range(2, 6):
-        lines = divide_polygon(p1, i, 6)
-        print(lines)
-        _draw_polygon(p1, lines, os.path.join("images", f"divide_{i}.png"))
+        lines = divide_polygon(poly, i, 1)
+        print(f"when n={i}, result: {lines}")
+        _draw_polygon(poly, lines, os.path.join("images", f"divide_{i}.png"))

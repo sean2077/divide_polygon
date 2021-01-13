@@ -2,7 +2,7 @@
 Author       : zhangxianbing
 Date         : 2021-01-11 09:01:15
 LastEditors  : zhangxianbing
-LastEditTime : 2021-01-12 12:46:17
+LastEditTime : 2021-01-13 16:29:05
 Description  : Divide polygon
 """
 
@@ -70,7 +70,7 @@ def _dividing_polygon_segs(p: _Polygon) -> List[_Segment]:
             b = b + 1
         if rt.y < rb.y:
             break
-        segs.append(((rb, rt)))
+        segs.append((rb, rt))
         lt = rt
         lb = rb
     return segs

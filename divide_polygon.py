@@ -2,7 +2,7 @@
 Author       : zhangxianbing
 Date         : 2021-01-11 09:01:15
 LastEditors  : zhangxianbing
-LastEditTime : 2021-01-13 17:27:06
+LastEditTime : 2021-01-14 09:17:56
 Description  : Divide polygon
 """
 
@@ -187,10 +187,10 @@ def _rotate_coord(origin: List[Point], theta: float) -> None:
         theta (float): the angle to rotate
     """
     sin_theta, cos_theta = sin(theta), cos(theta)
-    for i in range(len(origin)):
-        px, py = origin[i].x, origin[i].y
-        origin[i].x = cos_theta * px + sin_theta * py
-        origin[i].y = -sin_theta * px + cos_theta * py
+    for p in origin:
+        px, py = p.x, p.y
+        p.x = cos_theta * px + sin_theta * py
+        p.y = -sin_theta * px + cos_theta * py
 
 
 def divide_polygon(poly: _Polygon, n: int, idx: int, in_place=False) -> List[_Segment]:
@@ -218,8 +218,8 @@ def divide_polygon(poly: _Polygon, n: int, idx: int, in_place=False) -> List[_Se
     lines = _divide_polygon(p, n)
 
     # convert to origin coord
-    for i in range(len(lines)):
-        _rotate_coord(lines[i], -theta)
+    for line in lines:
+        _rotate_coord(line, -theta)
 
     return lines
 

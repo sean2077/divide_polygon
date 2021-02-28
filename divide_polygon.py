@@ -2,7 +2,7 @@
 Author       : zhangxianbing
 Date         : 2021-01-11 09:01:15
 LastEditors  : zhangxianbing
-LastEditTime : 2021-01-14 09:17:56
+LastEditTime : 2021-02-28 22:49:15
 Description  : Divide polygon
 """
 
@@ -111,6 +111,10 @@ def _trapezoid_area(left: _Segment, right: _Segment) -> float:
     return (a + b) * h / 2.0
 
 
+def _isclose(a, b, precision=1e-8):
+    return abs(a - b) <= precision
+
+
 def _sep_trapeziod(left: _Segment, right: _Segment, des_area: float) -> float:
     """Separate the left part of the specified area from the trapeziod.
 
@@ -126,10 +130,11 @@ def _sep_trapeziod(left: _Segment, right: _Segment, des_area: float) -> float:
     b = right[1].y - right[0].y
     h = right[0].x - left[0].x
     area = (a + b) * h / 2.0
-    if a == b:
+    if _isclose(a, b):
         lmd = des_area / (area - des_area)
     else:
         c = sqrt(a ** 2 + (des_area / area) * (b ** 2 - a ** 2))
+
         lmd = (c - a) / (b - c)
     return (left[0].x + lmd * right[0].x) / (1 + lmd)
 
@@ -250,16 +255,24 @@ if __name__ == "__main__":
     import os
 
     # poly = [Point(3, 3), Point(8, 3), Point(8, 6), Point(3, 6)]
+    # poly = [
+    #     Point(-1, 0),
+    #     Point(0.5, -1),
+    #     Point(1.5, -1.5),
+    #     Point(2.5, -1.5),
+    #     Point(3.5, -1),
+    #     Point(3.5, 3),
+    #     Point(2.5, 3.5),
+    #     Point(1, 3),
+    #     Point(-0.5, 1),
+    # ]
     poly = [
-        Point(-1, 0),
-        Point(0.5, -1),
-        Point(1.5, -1.5),
-        Point(2.5, -1.5),
-        Point(3.5, -1),
-        Point(3.5, 3),
-        Point(2.5, 3.5),
-        Point(1, 3),
-        Point(-0.5, 1),
+        Point(1, 6),
+        Point(4, 2),
+        Point(8, 3),
+        Point(10, 5),
+        Point(7, 9),
+        Point(5, 9),
     ]
 
     # print(_sep_polygon_lines(p1))
@@ -278,6 +291,6 @@ if __name__ == "__main__":
 
     print(f"polygon: {poly}")
     for i in range(2, 6):
-        lines = divide_polygon(poly, i, 1)
+        lines = divide_polygon(poly, i, 2)
         print(f"when n={i}, result: {lines}")
         _draw_polygon(poly, lines, os.path.join("images", f"divide_{i}.png"))

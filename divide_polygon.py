@@ -1,7 +1,7 @@
 """
-Author       : zhangxianbing
+Author       : sean2077
 Date         : 2021-01-11 09:01:15
-LastEditors  : zhangxianbing
+LastEditors  : sean2077
 LastEditTime : 2021-02-28 22:49:15
 Description  : Divide polygon
 """
@@ -133,7 +133,7 @@ def _sep_trapeziod(left: _Segment, right: _Segment, des_area: float) -> float:
     if _isclose(a, b):
         lmd = des_area / (area - des_area)
     else:
-        c = sqrt(a ** 2 + (des_area / area) * (b ** 2 - a ** 2))
+        c = sqrt(a**2 + (des_area / area) * (b**2 - a**2))
 
         lmd = (c - a) / (b - c)
     return (left[0].x + lmd * right[0].x) / (1 + lmd)
